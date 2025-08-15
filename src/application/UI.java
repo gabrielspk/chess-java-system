@@ -71,14 +71,12 @@ public class UI {
 
 	public static void clearScreenCmdBash() {
 		try {
-	        // Primeiro tenta comando do SO
 	        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
 	            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
 	        } else {
 	            new ProcessBuilder("clear").inheritIO().start().waitFor();
 	        }
 	    } catch (Exception e) {
-	        // Se falhar, usa ANSI como fallback
 	        System.out.print("\033[H\033[2J");
 	        System.out.flush();
 	    }
