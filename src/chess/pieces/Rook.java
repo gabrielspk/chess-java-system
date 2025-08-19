@@ -9,7 +9,6 @@ public class Rook extends ChessPiece {
 
 	public Rook(Board board, Color color) {
 		super(board, color);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -53,6 +52,7 @@ public class Rook extends ChessPiece {
 			mat[p.getRow()][p.getColumn()] = true;
 		}
 		
+		// Left
 		p.setValues(position.getRow(), position.getColumn() - 1);
 		while (getBoard().positionExists(p) && !getBoard().thereIsAPiece(p)) {
 			mat[p.getRow()][p.getColumn()] = true;
