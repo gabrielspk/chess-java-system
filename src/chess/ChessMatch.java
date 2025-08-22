@@ -100,9 +100,44 @@ public class ChessMatch {
 	}
 
 	public boolean[][] possibleMoves(ChessPosition sourcePosition) {
-		Position position = sourcePosition.toPosition();
-		validateSourcePosition(position);
-		return board.getPiece(position).possibleMoves();
+		Position source = sourcePosition.toPosition();
+		validateSourcePosition(source);
+		ChessPiece piece = (ChessPiece) board.getPiece(source);
+		return piece.possibleMoves();
+	}
+
+	public boolean[][] legalMoves(ChessPosition sourcePosition) {
+		Position source = sourcePosition.toPosition();
+		validateSourcePosition(source);
+		ChessPiece piece = (ChessPiece) board.getPiece(source);
+
+		boolean[][] baseMoves = piece.possibleMoves();
+		boolean[][] legalMoves = new boolean[board.getRows()][board.getColumns()];
+
+		for (int i = 0; i < board.getRows(); i++) {
+			for (int j = 0; j < board.getColumns(); j++) {
+				if (baseMoves[i][j]) {
+					Position target = new Position(i, j);
+					Piece captured = makeMove(source, target);
+					boolean kingSafe = !isKingInCheck(piece.getColor());
+					undoMove(source, target, captured); 
+
+					if (kingSafe) {
+						legalMoves[i][j] = true;
+					}
+				}
+			}
+		}
+
+		return legalMoves;
+	}
+
+	public boolean[][] getPossibleMoves(ChessPosition sourcePosition) {
+		if (isCheck) {
+			return legalMoves(sourcePosition);
+		} else {
+			return possibleMoves(sourcePosition);
+		}
 	}
 
 	public ChessPiece performChessMove(ChessPosition sourcePosition, ChessPosition targetPosition) {
