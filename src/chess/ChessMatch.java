@@ -18,7 +18,8 @@ public class ChessMatch {
 	private Board board;
 	private int turn;
 	private Color currentPlayer;
-	private boolean isCheck;
+	private boolean check;
+	private boolean checkMate;
 
 	private List<ChessPiece> piecesOnTheBoard = new ArrayList<>();
 	private List<ChessPiece> capturedPieces = new ArrayList<>();
@@ -27,7 +28,7 @@ public class ChessMatch {
 		board = new Board(8, 8);
 		turn = 1;
 		currentPlayer = Color.WHITE;
-		isCheck = false;
+		check = false;
 		initialSetup();
 	}
 
@@ -40,7 +41,11 @@ public class ChessMatch {
 	}
 
 	public boolean getCheck() {
-		return isCheck;
+		return check;
+	}
+
+	public boolean getCheckMate() {
+		return checkMate;
 	}
 
 	public ChessPiece[][] getPieces() {
@@ -120,7 +125,7 @@ public class ChessMatch {
 					Position target = new Position(i, j);
 					Piece captured = makeMove(source, target);
 					boolean kingSafe = !isKingInCheck(piece.getColor());
-					undoMove(source, target, captured); 
+					undoMove(source, target, captured);
 
 					if (kingSafe) {
 						legalMoves[i][j] = true;
@@ -128,12 +133,11 @@ public class ChessMatch {
 				}
 			}
 		}
-
 		return legalMoves;
 	}
 
 	public boolean[][] getPossibleMoves(ChessPosition sourcePosition) {
-		if (isCheck) {
+		if (check) {
 			return legalMoves(sourcePosition);
 		} else {
 			return possibleMoves(sourcePosition);
@@ -152,9 +156,13 @@ public class ChessMatch {
 			throw new ChessException("You can't put yourself in check");
 		}
 
-		isCheck = (isKingInCheck(getOpponentColor(currentPlayer))) ? true : false;
+		check = (isKingInCheck(getOpponent(currentPlayer))) ? true : false;
 
-		nextTurn();
+		if (isCheckMate(getOpponent(currentPlayer))) {
+			checkMate = true;
+		} else {
+			nextTurn();
+		}
 		return (ChessPiece) capturedPiece;
 	}
 
@@ -172,7 +180,7 @@ public class ChessMatch {
 		}
 	}
 
-	private Color getOpponentColor(Color color) {
+	private Color getOpponent(Color color) {
 		return (color == Color.WHITE) ? Color.BLACK : Color.WHITE;
 	}
 
@@ -190,7 +198,7 @@ public class ChessMatch {
 	private boolean isKingInCheck(Color color) {
 		Position kingPosition = findKingByColor(color).getChessPosition().toPosition();
 		List<Piece> opponentPieces = piecesOnTheBoard.stream()
-				.filter(x -> ((ChessPiece) x).getColor() == getOpponentColor(color)).collect(Collectors.toList());
+				.filter(x -> ((ChessPiece) x).getColor() == getOpponent(color)).collect(Collectors.toList());
 
 		for (Piece opponentPiece : opponentPieces) {
 			boolean[][] opponentMovesMatrix = opponentPiece.possibleMoves();
@@ -201,22 +209,56 @@ public class ChessMatch {
 		return false;
 	}
 
+	private boolean isCheckMate(Color color) {
+		if (!isKingInCheck(color)) {
+			return false;
+		}
+
+		List<Piece> pieces = piecesOnTheBoard.stream().filter(x -> ((ChessPiece) x).getColor() == (color))
+				.collect(Collectors.toList());
+
+		for (Piece piece : pieces) {
+			boolean[][] possibleMoves = piece.possibleMoves();
+			for (int i = 0; i < board.getRows(); i++) {
+				for (int j = 0; j < board.getColumns(); j++) {
+					if (possibleMoves[i][j]) {
+						Position source = ((ChessPiece) piece).getChessPosition().toPosition();
+						Position target = new Position(i, j);
+
+						Piece capturedPiece = makeMove(source, target);
+						boolean kingSafe = !isKingInCheck(color);
+						undoMove(source, target, capturedPiece);
+
+						if (kingSafe) {
+							return false;
+						}
+					}
+				}
+			}
+		}
+		return true;
+	}
+
 	private void initialSetup() {
 		// Rook
-		placeNewPiece('a', 1, new Rook(board, Color.WHITE));
 		placeNewPiece('h', 1, new Rook(board, Color.WHITE));
-		placeNewPiece('h', 8, new Rook(board, Color.BLACK));
-		placeNewPiece('a', 8, new Rook(board, Color.BLACK));
+		placeNewPiece('h', 7, new Rook(board, Color.WHITE));
+		placeNewPiece('b', 8, new Rook(board, Color.BLACK));
+		placeNewPiece('f', 1, new Rook(board, Color.WHITE));
+		placeNewPiece('f', 2, new Rook(board, Color.WHITE));
+		placeNewPiece('d', 1, new Rook(board, Color.WHITE));
+		
+		
 		// Bishop
-		placeNewPiece('c', 1, new Bishop(board, Color.WHITE));
-		placeNewPiece('f', 1, new Bishop(board, Color.WHITE));
+		//placeNewPiece('c', 1, new Bishop(board, Color.WHITE));
+		//placeNewPiece('f', 1, new Bishop(board, Color.WHITE));
 		placeNewPiece('c', 8, new Bishop(board, Color.BLACK));
 		placeNewPiece('f', 8, new Bishop(board, Color.BLACK));
 		// King
 		placeNewPiece('e', 1, new King(board, Color.WHITE));
-		placeNewPiece('e', 8, new King(board, Color.BLACK));
+		placeNewPiece('a', 8, new King(board, Color.BLACK));
 		// Queen
-		placeNewPiece('d', 1, new Queen(board, Color.WHITE));
-		placeNewPiece('d', 8, new Queen(board, Color.BLACK));
+		//placeNewPiece('d', 1, new Queen(board, Color.WHITE));
+		//placeNewPiece('d', 8, new Queen(board, Color.BLACK));
 	}
 }
