@@ -11,6 +11,7 @@ import chess.exceptions.ChessException;
 import chess.pieces.Bishop;
 import chess.pieces.King;
 import chess.pieces.Knight;
+import chess.pieces.Pawn;
 import chess.pieces.Queen;
 import chess.pieces.Rook;
 
@@ -243,27 +244,52 @@ public class ChessMatch {
 	}
 
 	private void initialSetup() {
-		// Rook
-		placeNewPiece('h', 1, new Rook(board, Color.WHITE));
-		placeNewPiece('h', 7, new Rook(board, Color.WHITE));
-		//placeNewPiece('b', 8, new Rook(board, Color.BLACK));
-		//placeNewPiece('f', 1, new Rook(board, Color.WHITE));
-		//placeNewPiece('f', 2, new Rook(board, Color.WHITE));
-		//placeNewPiece('d', 1, new Rook(board, Color.WHITE));
-		
-		
-		// Bishop
-		placeNewPiece('c', 1, new Bishop(board, Color.WHITE));
-		placeNewPiece('f', 1, new Bishop(board, Color.WHITE));
-		placeNewPiece('c', 8, new Bishop(board, Color.BLACK));
-		placeNewPiece('f', 8, new Bishop(board, Color.BLACK));
-		// King
-		placeNewPiece('e', 1, new King(board, Color.WHITE));
-		placeNewPiece('a', 8, new King(board, Color.BLACK));
-		// Queen
-		placeNewPiece('d', 1, new Queen(board, Color.WHITE));
-		// placeNewPiece('d', 8, new Queen(board, Color.BLACK));
-		// Knight
-		placeNewPiece('b', 1, new Knight(board, Color.WHITE));
+	    // ======== White Pieces ========
+	    // Rooks
+	    placeNewPiece('a', 1, new Rook(board, Color.WHITE));
+	    placeNewPiece('h', 1, new Rook(board, Color.WHITE));
+	    
+	    // Knights
+	    placeNewPiece('b', 1, new Knight(board, Color.WHITE));
+	    placeNewPiece('g', 1, new Knight(board, Color.WHITE));
+	    
+	    // Bishops
+	    placeNewPiece('c', 1, new Bishop(board, Color.WHITE));
+	    placeNewPiece('f', 1, new Bishop(board, Color.WHITE));
+	    
+	    // Queen
+	    placeNewPiece('d', 1, new Queen(board, Color.WHITE));
+	    
+	    // King
+	    placeNewPiece('e', 1, new King(board, Color.WHITE));
+	    
+	    // Pawns
+	    for (char col = 'a'; col <= 'h'; col++) {
+	        placeNewPiece(col, 2, new Pawn(board, Color.WHITE));
+	    }
+
+	    // ======== Black Pieces ========
+	    // Rooks
+	    placeNewPiece('a', 8, new Rook(board, Color.BLACK));
+	    placeNewPiece('h', 8, new Rook(board, Color.BLACK));
+	    
+	    // Knights
+	    placeNewPiece('b', 8, new Knight(board, Color.BLACK));
+	    placeNewPiece('g', 8, new Knight(board, Color.BLACK));
+	    
+	    // Bishops
+	    placeNewPiece('c', 8, new Bishop(board, Color.BLACK));
+	    placeNewPiece('f', 8, new Bishop(board, Color.BLACK));
+	    
+	    // Queen
+	    placeNewPiece('d', 8, new Queen(board, Color.BLACK));
+	    
+	    // King
+	    placeNewPiece('e', 8, new King(board, Color.BLACK));
+	    
+	    // Pawns
+	    for (char col = 'a'; col <= 'h'; col++) {
+	        placeNewPiece(col, 7, new Pawn(board, Color.BLACK));
+	    }
 	}
 }
