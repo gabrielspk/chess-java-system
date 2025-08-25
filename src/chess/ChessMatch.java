@@ -10,6 +10,7 @@ import boardgame.Position;
 import chess.exceptions.ChessException;
 import chess.pieces.Bishop;
 import chess.pieces.King;
+import chess.pieces.Knight;
 import chess.pieces.Queen;
 import chess.pieces.Rook;
 
@@ -243,15 +244,15 @@ public class ChessMatch {
 		// Rook
 		placeNewPiece('h', 1, new Rook(board, Color.WHITE));
 		placeNewPiece('h', 7, new Rook(board, Color.WHITE));
-		placeNewPiece('b', 8, new Rook(board, Color.BLACK));
-		placeNewPiece('f', 1, new Rook(board, Color.WHITE));
-		placeNewPiece('f', 2, new Rook(board, Color.WHITE));
-		placeNewPiece('d', 1, new Rook(board, Color.WHITE));
+		//placeNewPiece('b', 8, new Rook(board, Color.BLACK));
+		//placeNewPiece('f', 1, new Rook(board, Color.WHITE));
+		//placeNewPiece('f', 2, new Rook(board, Color.WHITE));
+		//placeNewPiece('d', 1, new Rook(board, Color.WHITE));
 		
 		
 		// Bishop
-		//placeNewPiece('c', 1, new Bishop(board, Color.WHITE));
-		//placeNewPiece('f', 1, new Bishop(board, Color.WHITE));
+		placeNewPiece('c', 1, new Bishop(board, Color.WHITE));
+		placeNewPiece('f', 1, new Bishop(board, Color.WHITE));
 		placeNewPiece('c', 8, new Bishop(board, Color.BLACK));
 		placeNewPiece('f', 8, new Bishop(board, Color.BLACK));
 		// King
@@ -259,6 +260,8 @@ public class ChessMatch {
 		placeNewPiece('a', 8, new King(board, Color.BLACK));
 		// Queen
 		//placeNewPiece('d', 1, new Queen(board, Color.WHITE));
-		//placeNewPiece('d', 8, new Queen(board, Color.BLACK));
+		// placeNewPiece('d', 8, new Queen(board, Color.BLACK));
+		// Knight
+		placeNewPiece('b', 1, new Knight(board, Color.WHITE));
 	}
 }
