@@ -7,77 +7,164 @@ import chess.ChessPiece;
 import chess.Color;
 
 public class King extends ChessPiece {
-
-	private ChessMatch chessMatch;
-
-	public King(Board board, Color color, ChessMatch chessMatch) {
-		super(board, color);
-		this.chessMatch = chessMatch;
-	}
-
-	@Override
-	public String toString() {
-		return "K";
-	}
-
-	@Override
-	public boolean[][] possibleMoves() {
-		boolean[][] mat = new boolean[getBoard().getRows()][getBoard().getColumns()];
-
-		Position p = new Position(0, 0);
-
-		int[][] movimentosPossiveis = { { -1, 0 }, // cima
-				{ 1, 0 }, // abaixo
-				{ 0, -1 }, // esquerda
-				{ 0, 1 }, // direita
-				{ -1, -1 }, // diagonal esquerda cima
-				{ -1, 1 }, // diagonal direita cima
-				{ 1, -1 }, // diagonal esquerda baixo
-				{ 1, 1 } // diagonal direita baixo
-		};
-
-		for (int[] movimento : movimentosPossiveis) {
-			p.setValues(position.getRow() + movimento[0], position.getColumn() + movimento[1]);
-			if (getBoard().positionExists(p)) {
-				if (!getBoard().thereIsAPiece(p)) {
-					mat[p.getRow()][p.getColumn()] = true;
-				} else if (isThereOpponentPiece(p)) {
-					mat[p.getRow()][p.getColumn()] = true;
-				}
-			}
-		}
-
-		if (getMoveCount() == 0 && !chessMatch.getCheck()) {
-			Position posRook = new Position(position.getRow(), position.getColumn() + 3);
-			if (testRookCastling(posRook)) {
-				Position p1 = new Position(position.getRow(), position.getColumn() + 1);
-				Position p2 = new Position(position.getRow(), position.getColumn() + 2);
-				if (getBoard().getPiece(p1) == null && getBoard().getPiece(p2) == null
-					&& !chessMatch.isUnderAttack(p1, getColor())
-					&& !chessMatch.isUnderAttack(p2, getColor())) {
-					mat[position.getRow()][position.getColumn() + 2] = true;
-				}
-			}
-			Position posRook2 = new Position(position.getRow(), position.getColumn() - 4);
-			if (testRookCastling(posRook2)) {
-				Position p1 = new Position(position.getRow(), position.getColumn() - 1);
-				Position p2 = new Position(position.getRow(), position.getColumn() - 2);
-				Position p3 = new Position(position.getRow(), position.getColumn() - 3);				
-				if (getBoard().getPiece(p1) == null && getBoard().getPiece(p2) == null && getBoard().getPiece(p3) == null
-					&& !chessMatch.isUnderAttack(p1, getColor())
-					&& !chessMatch.isUnderAttack(p2, getColor())
-					&& !chessMatch.isUnderAttack(p3, getColor())) {
-					mat[position.getRow()][position.getColumn() - 2] = true;
-				}
-			}
-		}
-
-		return mat;
-	}
-
-	private boolean testRookCastling(Position position) {
-		ChessPiece piece = (ChessPiece) getBoard().getPiece(position);
-		return piece != null && piece instanceof Rook && piece.getColor() == getColor() && piece.getMoveCount() == 0;
-	}
-
+    
+    private static final int[][] KING_MOVES = {
+        {-1, 0},  // cima
+        {1, 0},   // abaixo
+        {0, -1},  // esquerda
+        {0, 1},   // direita
+        {-1, -1}, // diagonal esquerda cima
+        {-1, 1},  // diagonal direita cima
+        {1, -1},  // diagonal esquerda baixo
+        {1, 1}    // diagonal direita baixo
+    };
+    
+    private static final int KINGSIDE_ROOK_OFFSET = 3;
+    private static final int QUEENSIDE_ROOK_OFFSET = -4;
+    private static final int KINGSIDE_CASTLE_OFFSET = 2;
+    private static final int QUEENSIDE_CASTLE_OFFSET = -2;
+    
+    private final ChessMatch chessMatch;
+    
+    public King(Board board, Color color, ChessMatch chessMatch) {
+        super(board, color);
+        this.chessMatch = chessMatch;
+    }
+    
+    @Override
+    public String toString() {
+        return "K";
+    }
+    
+    @Override
+    public boolean[][] possibleMoves() {
+        boolean[][] moves = createEmptyMovesMatrix();
+        
+        addRegularKingMoves(moves);
+        addCastlingMovesIfPossible(moves);
+        
+        return moves;
+    }
+    
+    private boolean[][] createEmptyMovesMatrix() {
+        return new boolean[getBoard().getRows()][getBoard().getColumns()];
+    }
+    
+    private void addRegularKingMoves(boolean[][] moves) {
+        for (int[] move : KING_MOVES) {
+            Position targetPosition = calculateNewPosition(move[0], move[1]);
+            
+            if (isValidKingMove(targetPosition)) {
+                markAsValidMove(moves, targetPosition);
+            }
+        }
+    }
+    
+    private Position calculateNewPosition(int rowOffset, int columnOffset) {
+        return new Position(
+            position.getRow() + rowOffset, 
+            position.getColumn() + columnOffset
+        );
+    }
+    
+    private boolean isValidKingMove(Position targetPosition) {
+        return canMoveToEmptySquare(targetPosition) || canCaptureOpponentPiece(targetPosition);
+    }
+    
+    private void addCastlingMovesIfPossible(boolean[][] moves) {
+        if (!canCastle()) {
+            return;
+        }
+        
+        addKingsideCastlingIfPossible(moves);
+        addQueensideCastlingIfPossible(moves);
+    }
+    
+    private boolean canCastle() {
+        return hasNeverMoved() && !isInCheck();
+    }
+    
+    private boolean hasNeverMoved() {
+        return getMoveCount() == 0;
+    }
+    
+    private boolean isInCheck() {
+        return chessMatch.getCheck();
+    }
+    
+    private void addKingsideCastlingIfPossible(boolean[][] moves) {
+        Position rookPosition = calculateNewPosition(0, KINGSIDE_ROOK_OFFSET);
+        
+        if (canCastleWith(rookPosition)) {
+            Position[] pathPositions = {
+                calculateNewPosition(0, 1),
+                calculateNewPosition(0, 2)
+            };
+            
+            if (isPathClearForCastling(pathPositions)) {
+                Position castlePosition = calculateNewPosition(0, KINGSIDE_CASTLE_OFFSET);
+                markAsValidMove(moves, castlePosition);
+            }
+        }
+    }
+    
+    private void addQueensideCastlingIfPossible(boolean[][] moves) {
+        Position rookPosition = calculateNewPosition(0, QUEENSIDE_ROOK_OFFSET);
+        
+        if (canCastleWith(rookPosition)) {
+            Position[] pathPositions = {
+                calculateNewPosition(0, -1),
+                calculateNewPosition(0, -2),
+                calculateNewPosition(0, -3)
+            };
+            
+            if (isPathClearForCastling(pathPositions)) {
+                Position castlePosition = calculateNewPosition(0, QUEENSIDE_CASTLE_OFFSET);
+                markAsValidMove(moves, castlePosition);
+            }
+        }
+    }
+    
+    private boolean canCastleWith(Position rookPosition) {
+        return isValidRookForCastling(rookPosition);
+    }
+    
+    private boolean isPathClearForCastling(Position[] pathPositions) {
+        for (Position pos : pathPositions) {
+            if (hasObstacleAt(pos) || isUnderAttack(pos)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    private boolean hasObstacleAt(Position position) {
+        return getBoard().positionExists(position) && getBoard().thereIsAPiece(position);
+    }
+    
+    private boolean isUnderAttack(Position position) {
+        return chessMatch.isUnderAttack(position, getColor());
+    }
+    
+    private boolean canMoveToEmptySquare(Position position) {
+        return getBoard().positionExists(position) && 
+               !getBoard().thereIsAPiece(position);
+    }
+    
+    private boolean canCaptureOpponentPiece(Position position) {
+        return getBoard().positionExists(position) && 
+               isThereOpponentPiece(position);
+    }
+    
+    private void markAsValidMove(boolean[][] moves, Position position) {
+        moves[position.getRow()][position.getColumn()] = true;
+    }
+    
+    private boolean isValidRookForCastling(Position rookPosition) {
+        ChessPiece piece = (ChessPiece) getBoard().getPiece(rookPosition);
+        return piece != null && 
+               piece instanceof Rook && 
+               piece.getColor() == getColor() && 
+               piece.getMoveCount() == 0;
+    }
 }
