@@ -66,7 +66,11 @@ public class Pawn extends ChessPiece {
     }
     
     private void addEnPassantCaptures(boolean[][] moves) {
-        int direction = getPawnDirection();
+        if (!isInEnPassantRank()) {
+            return;
+        }
+    	
+    	int direction = getPawnDirection();
         
         // En passant à direita
         Position rightAdjacent = new Position(position.getRow(), position.getColumn() + 1);
@@ -81,6 +85,12 @@ public class Pawn extends ChessPiece {
             Position captureSquare = new Position(leftAdjacent.getRow() + direction, leftAdjacent.getColumn());
             markAsValidMove(moves, captureSquare);
         }
+    }
+    
+    private boolean isInEnPassantRank() {
+        // Peão branco deve estar na linha 3 (índice), peão preto na linha 4
+        return (getColor() == Color.WHITE && position.getRow() == 3) ||
+               (getColor() == Color.BLACK && position.getRow() == 4);
     }
     
     private int getPawnDirection() {

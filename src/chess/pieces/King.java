@@ -131,7 +131,7 @@ public class King extends ChessPiece {
     
     private boolean isPathClearForCastling(Position[] pathPositions) {
         for (Position pos : pathPositions) {
-            if (hasObstacleAt(pos) || isUnderAttack(pos)) {
+            if (hasObstacleAt(pos)) {
                 return false;
             }
         }
@@ -140,10 +140,6 @@ public class King extends ChessPiece {
     
     private boolean hasObstacleAt(Position position) {
         return getBoard().positionExists(position) && getBoard().thereIsAPiece(position);
-    }
-    
-    private boolean isUnderAttack(Position position) {
-        return chessMatch.isUnderAttack(position, getColor());
     }
     
     private boolean canMoveToEmptySquare(Position position) {
