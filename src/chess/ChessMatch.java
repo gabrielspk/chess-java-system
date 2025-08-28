@@ -27,6 +27,9 @@ public class ChessMatch {
 	private ChessPiece enPassantVulnerable;
 	private ChessPiece promoted;
 
+	private static final int WHITE_PROMOTION_ROW = 0;
+	private static final int BLACK_PROMOTION_ROW = 7;
+
 	private List<ChessPiece> piecesOnTheBoard = new ArrayList<>();
 	private List<ChessPiece> capturedPieces = new ArrayList<>();
 
@@ -79,7 +82,7 @@ public class ChessMatch {
 
 	// ================== MOVE QUERIES ==================
 
-	public boolean[][] getLegalMoves(ChessPosition sourcePosition) {
+		public boolean[][] getLegalMoves(ChessPosition sourcePosition) {
 		Position source = sourcePosition.toPosition();
 		validateSourcePosition(source);
 		ChessPiece piece = (ChessPiece) board.getPiece(source);
@@ -104,10 +107,6 @@ public class ChessMatch {
 		return legalMoves;
 	}
 
-	public boolean[][] getAvailableMoves(ChessPosition sourcePosition) {
-		return getLegalMoves(sourcePosition);
-	}
-
 	// ================== VALIDATION ==================
 	public ChessPiece validateSourcePosition(Position sourcePosition) {
 		if (!board.thereIsAPiece(sourcePosition)) {
@@ -130,48 +129,72 @@ public class ChessMatch {
 	}
 
 	// ================== GAME EXECUTION ==================
-	public ChessPiece executeMove(ChessPosition sourcePosition, ChessPosition targetPosition) {
-		draw = (isDraw(currentPlayer)) ? true : false;
-		
+	public ChessPiece performChessMove(ChessPosition sourcePosition, ChessPosition targetPosition) {
+		updateDrawStatus();
+
 		Position source = sourcePosition.toPosition();
 		Position target = targetPosition.toPosition();
+
 		validateSourcePosition(source);
 		validateTargetPosition(source, target);
+
 		Piece capturedPiece = makeMove(source, target);
 
+		validateKingSafety(source, target, capturedPiece);
+
+		ChessPiece movedPiece = (ChessPiece) board.getPiece(target);
+
+		handlePromotion(movedPiece, target);
+		updateCheckStatus();
+		updateCheckMateStatus();
+		updateDrawStatus();
+		
+		nextTurn();
+		
+		updateEnPassantVulnerability(movedPiece, source, target);
+
+		return (ChessPiece) capturedPiece;
+	}
+
+	private void updateCheckStatus() {
+		check = isKingInCheck(getOpponent(currentPlayer));
+	}
+
+	private void updateCheckMateStatus() {
+		checkMate = isCheckMate(getOpponent(currentPlayer));
+	}
+
+	private void updateDrawStatus() {
+		draw = isDraw(currentPlayer);
+	}
+
+	private void validateKingSafety(Position source, Position target, Piece capturedPiece) {
 		if (isKingInCheck(currentPlayer)) {
 			undoMove(source, target, capturedPiece);
 			throw new ChessException("You can't put yourself in check");
 		}
+	}
 
-		ChessPiece movedPiece = (ChessPiece) board.getPiece(target);
-
+	private void handlePromotion(ChessPiece movedPiece, Position target) {
 		promoted = null;
-		if (movedPiece instanceof Pawn) {
-			if ((movedPiece.getColor() == Color.WHITE && target.getRow() == 0)
-					|| (movedPiece.getColor() == Color.WHITE && target.getRow() == 7)) {
-				promoted = (ChessPiece) board.getPiece(target);
-				promoted = replacePromotedPiece("Q");
-			}
-		}
-		
-		check = (isKingInCheck(getOpponent(currentPlayer))) ? true : false;
 
-		if (isCheckMate(getOpponent(currentPlayer))) {
-			checkMate = true;
-		} else {
-			nextTurn();
-		}
+		if (!(movedPiece instanceof Pawn))
+			return;
 
-		// En passant
-		if (movedPiece instanceof Pawn
-				&& (target.getRow() == source.getRow() - 2 || target.getRow() == source.getRow() + 2)) {
-			enPassantVulnerable = movedPiece;
-		} else {
+		if ((movedPiece.getColor() == Color.WHITE && target.getRow() == WHITE_PROMOTION_ROW)
+				|| (movedPiece.getColor() == Color.BLACK && target.getRow() == BLACK_PROMOTION_ROW)) {
+			promoted = (ChessPiece) board.getPiece(target);
+			promoted = replacePromotedPiece("Q");
+		}
+	}
+
+	private void updateEnPassantVulnerability(ChessPiece movedPiece, Position source, Position target) {
+		if (!(movedPiece instanceof Pawn)) {
 			enPassantVulnerable = null;
+			return;
 		}
-
-		return (ChessPiece) capturedPiece;
+		// Verifica se o peão andou duas casas
+		enPassantVulnerable = (Math.abs(target.getRow() - source.getRow()) == 2) ? movedPiece : null;
 	}
 
 	// ================== PRIVATE UTILITIES ==================
@@ -392,24 +415,24 @@ public class ChessMatch {
 	}
 
 	public boolean isDraw(Color playerColor) {
-		return !isKingInCheck(playerColor) && !isThereAnyPossibleMovesDrawValidation(playerColor);
+		return !isKingInCheck(playerColor) && !hasLegalMoves(playerColor);
 	}
 
-	private boolean isThereAnyPossibleMovesDrawValidation(Color playerColor) {
+	private boolean hasLegalMoves(Color playerColor) {
 		List<Piece> pieces = piecesOnTheBoard.stream().filter(x -> ((ChessPiece) x).getColor() == playerColor)
 				.collect(Collectors.toList());
 
 		for (Piece piece : pieces) {
-			
+
 			boolean[][] possibleMoves = piece.possibleMoves();
-			for (int i=0;i < possibleMoves.length;i++) {
-				for (int j=0;j < possibleMoves[i].length;j++) {
-					if(possibleMoves[i][j]) {
+			for (int i = 0; i < possibleMoves.length; i++) {
+				for (int j = 0; j < possibleMoves[i].length; j++) {
+					if (possibleMoves[i][j]) {
 						return true;
 					}
 				}
 			}
-			
+
 		}
 		return false;
 	}
