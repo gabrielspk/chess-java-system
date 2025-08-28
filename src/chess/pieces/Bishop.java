@@ -6,7 +6,13 @@ import chess.ChessPiece;
 import chess.Color;
 
 public class Bishop extends ChessPiece {
-
+	
+	private static final int[][] BISHOP_DIRECTIONS = {
+		{ -1, -1 }, // cima-esquerda
+		{ -1, 1 }, // cima-direita
+		{ 1, -1 }, // baixo-esquerda
+		{ 1, 1 } // baixo-direita
+	};
 	public Bishop(Board board, Color color) {
 		super(board, color);
 	}
@@ -16,57 +22,50 @@ public class Bishop extends ChessPiece {
 		return "B";
 	}
 
-	@Override
+	@Override	
 	public boolean[][] possibleMoves() {
-		boolean[][] mat = new boolean[getBoard().getRows()][getBoard().getColumns()];
+		boolean[][] moves = createEmptyMovesMatrix();
 
-		Position p = new Position(0, 0);
+		addBishopMoves(moves);
+		return moves;
+	}
+	
+	private boolean[][] createEmptyMovesMatrix() {
+		return new boolean[getBoard().getRows()][getBoard().getColumns()];
+	}
+	
+	private void addBishopMoves(boolean[][] moves) {
+		for (int[] direction : BISHOP_DIRECTIONS) {
+			addMovesInDirection(moves, direction[0], direction[1]);
+		}
+	}
+	
+	private void addMovesInDirection(boolean[][] moves, int rowDirection, int columnDirection) {
+		Position currentPosition = new Position(position.getRow() + rowDirection, 
+				position.getColumn() + columnDirection);
 
-		// Above + right
-		p.setValues(position.getRow() - 1, position.getColumn() + 1);
-		while (getBoard().positionExists(p) && !getBoard().thereIsAPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-			p.setRow(p.getRow() - 1);
-			p.setColumn(p.getColumn() + 1);
-		}
-		if (getBoard().positionExists(p) && isThereOpponentPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-		}
-
-		// Above + left
-		p.setValues(position.getRow() - 1, position.getColumn() - 1);
-		while (getBoard().positionExists(p) && !getBoard().thereIsAPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-			p.setRow(p.getRow() - 1);
-			p.setColumn(p.getColumn() - 1);
-		}
-		if (getBoard().positionExists(p) && isThereOpponentPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-		}
-
-		// Down + right
-		p.setValues(position.getRow() + 1, position.getColumn() + 1);
-		while (getBoard().positionExists(p) && !getBoard().thereIsAPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-			p.setRow(p.getRow() + 1);
-			p.setColumn(p.getColumn() + 1);
-		}
-		if (getBoard().positionExists(p) && isThereOpponentPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
+		while (canMoveToEmptySquare(currentPosition)) {
+			markAsValidMove(moves, currentPosition);
+			// Atualiza a posição atual modificando o mesmo objeto
+			currentPosition.setValues(currentPosition.getRow() + rowDirection,
+					currentPosition.getColumn() + columnDirection);
 		}
 
-		// Down + left
-		p.setValues(position.getRow() + 1, position.getColumn() - 1);
-		while (getBoard().positionExists(p) && !getBoard().thereIsAPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-			p.setRow(p.getRow() + 1);
-			p.setColumn(p.getColumn() - 1);
+		if (canCaptureOpponentPiece(currentPosition)) {
+			markAsValidMove(moves, currentPosition);
 		}
-		if (getBoard().positionExists(p) && isThereOpponentPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-		}
+	}
 
-		return mat;
+	private boolean canMoveToEmptySquare(Position position) {
+		return getBoard().positionExists(position) && !getBoard().thereIsAPiece(position);
+	}
+
+	private boolean canCaptureOpponentPiece(Position position) {
+		return getBoard().positionExists(position) && isThereOpponentPiece(position);
+	}
+
+	private void markAsValidMove(boolean[][] moves, Position position) {
+		moves[position.getRow()][position.getColumn()] = true;
 	}
 
 }
