@@ -52,7 +52,6 @@ public class Queen extends ChessPiece {
         
         while (canMoveToEmptySquare(currentPosition)) {
             markAsValidMove(moves, currentPosition);
-            // Atualiza a posição atual modificando o mesmo objeto
             currentPosition.setValues(
                 currentPosition.getRow() + rowDirection,
                 currentPosition.getColumn() + columnDirection

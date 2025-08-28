@@ -7,6 +7,12 @@ import chess.Color;
 
 public class Rook extends ChessPiece {
 
+	private static final int[][] ROOK_DIRECTIONS = { { -1, 0 }, // cima
+			{ 1, 0 }, // baixo
+			{ 0, -1 }, // esquerda
+			{ 0, 1 }, // direita
+	};
+
 	public Rook(Board board, Color color) {
 		super(board, color);
 	}
@@ -18,51 +24,46 @@ public class Rook extends ChessPiece {
 
 	@Override
 	public boolean[][] possibleMoves() {
-		boolean[][] mat = new boolean[getBoard().getRows()][getBoard().getColumns()];
+		boolean[][] moves = createEmptyMovesMatrix();
 
-		Position p = new Position(0, 0);
+		addRookMoves(moves);
+		return moves;
+	}
 
-		// Above
-		p.setValues(position.getRow() - 1, position.getColumn());
-		while (getBoard().positionExists(p) && !getBoard().thereIsAPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-			p.setRow(p.getRow() - 1);
-		}
-		if (getBoard().positionExists(p) && isThereOpponentPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-		}
+	private boolean[][] createEmptyMovesMatrix() {
+		return new boolean[getBoard().getRows()][getBoard().getColumns()];
+	}
 
-		// Down
-		p.setValues(position.getRow() + 1, position.getColumn());
-		while (getBoard().positionExists(p) && !getBoard().thereIsAPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-			p.setRow(p.getRow() + 1);
+	private void addRookMoves(boolean[][] moves) {
+		for (int[] direction : ROOK_DIRECTIONS) {
+			markPossibleMoves(moves, direction[0], direction[1]);
 		}
-		if (getBoard().positionExists(p) && isThereOpponentPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-		}
+	}
 
-		// Right
-		p.setValues(position.getRow(), position.getColumn() + 1);
-		while (getBoard().positionExists(p) && !getBoard().thereIsAPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-			p.setColumn(p.getColumn() + 1);
-		}
-		if (getBoard().positionExists(p) && isThereOpponentPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-		}
-		
-		// Left
-		p.setValues(position.getRow(), position.getColumn() - 1);
-		while (getBoard().positionExists(p) && !getBoard().thereIsAPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-			p.setColumn(p.getColumn() - 1);
-		}
-		if (getBoard().positionExists(p) && isThereOpponentPiece(p)) {
-			mat[p.getRow()][p.getColumn()] = true;
-		}
+	private void markPossibleMoves(boolean[][] moves, int rowDirection, int columnDirection) {
+		Position currentPosition = new Position(position.getRow() + rowDirection,
+				position.getColumn() + columnDirection);
 
-		return mat;
+		while (canMoveToEmptySquare(currentPosition)) {
+			markAsValidMove(moves, currentPosition);
+			currentPosition.setValues(currentPosition.getRow() + rowDirection,
+					currentPosition.getColumn() + columnDirection);
+		}
+		if (canCaptureOpponentPiece(currentPosition)) {
+			markAsValidMove(moves, currentPosition);
+		}
+	}
+
+	private boolean canMoveToEmptySquare(Position position) {
+		return getBoard().positionExists(position) && !getBoard().thereIsAPiece(position);
+	}
+
+	private boolean canCaptureOpponentPiece(Position position) {
+		return getBoard().positionExists(position) && isThereOpponentPiece(position);
+	}
+
+	private void markAsValidMove(boolean[][] moves, Position position) {
+		moves[position.getRow()][position.getColumn()] = true;
 	}
 
 }
