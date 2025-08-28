@@ -23,6 +23,7 @@ public class ChessMatch {
 	private Color currentPlayer;
 	private boolean check;
 	private boolean checkMate;
+	private boolean draw;
 	private ChessPiece enPassantVulnerable;
 	private ChessPiece promoted;
 
@@ -54,6 +55,10 @@ public class ChessMatch {
 		return checkMate;
 	}
 
+	public boolean getDraw() {
+		return draw;
+	}
+
 	public ChessPiece getEnPassantVulnerable() {
 		return enPassantVulnerable;
 	}
@@ -73,12 +78,6 @@ public class ChessMatch {
 	}
 
 	// ================== MOVE QUERIES ==================
-	public boolean[][] getPossibleMoves(ChessPosition sourcePosition) {
-		Position source = sourcePosition.toPosition();
-		validateSourcePosition(source);
-		ChessPiece piece = (ChessPiece) board.getPiece(source);
-		return piece.possibleMoves();
-	}
 
 	public boolean[][] getLegalMoves(ChessPosition sourcePosition) {
 		Position source = sourcePosition.toPosition();
@@ -132,6 +131,8 @@ public class ChessMatch {
 
 	// ================== GAME EXECUTION ==================
 	public ChessPiece executeMove(ChessPosition sourcePosition, ChessPosition targetPosition) {
+		draw = (isDraw(currentPlayer)) ? true : false;
+		
 		Position source = sourcePosition.toPosition();
 		Position target = targetPosition.toPosition();
 		validateSourcePosition(source);
@@ -147,13 +148,13 @@ public class ChessMatch {
 
 		promoted = null;
 		if (movedPiece instanceof Pawn) {
-			if ((movedPiece.getColor() == Color.WHITE && target.getRow() == 0) 
-				|| (movedPiece.getColor() == Color.WHITE && target.getRow() == 7)) {
-				promoted = (ChessPiece)board.getPiece(target);
+			if ((movedPiece.getColor() == Color.WHITE && target.getRow() == 0)
+					|| (movedPiece.getColor() == Color.WHITE && target.getRow() == 7)) {
+				promoted = (ChessPiece) board.getPiece(target);
 				promoted = replacePromotedPiece("Q");
 			}
 		}
-
+		
 		check = (isKingInCheck(getOpponent(currentPlayer))) ? true : false;
 
 		if (isCheckMate(getOpponent(currentPlayer))) {
@@ -289,7 +290,7 @@ public class ChessMatch {
 			board.placePiece(pawn, pawnPosition);
 		}
 	}
-	
+
 	public ChessPiece replacePromotedPiece(String type) {
 		if (promoted == null) {
 			throw new IllegalStateException("There's no piece to be promoted");
@@ -297,23 +298,26 @@ public class ChessMatch {
 		if (!type.equals("B") && !type.equals("H") && !type.equals("R") && !type.equals("Q")) {
 			throw new InvalidParameterException("Invalid type for promotion");
 		}
-		
+
 		Position promotedPiecePosition = promoted.getChessPosition().toPosition();
 		Piece removePromotedPiece = board.removePiece(promotedPiecePosition);
 		piecesOnTheBoard.remove(removePromotedPiece);
-		
+
 		ChessPiece newPromotedPiece = newPiece(type, promoted.getColor());
 		board.placePiece(newPromotedPiece, promotedPiecePosition);
 		piecesOnTheBoard.add(newPromotedPiece);
-		
+
 		return newPromotedPiece;
-		
+
 	}
-	
+
 	private ChessPiece newPiece(String type, Color color) {
-		if (type.equals("B")) return new Bishop(board, color);
-		if (type.equals("H")) return new Knight(board, color);
-		if (type.equals("R")) return new Rook(board, color);
+		if (type.equals("B"))
+			return new Bishop(board, color);
+		if (type.equals("H"))
+			return new Knight(board, color);
+		if (type.equals("R"))
+			return new Rook(board, color);
 		return new Queen(board, color);
 	}
 
@@ -385,6 +389,29 @@ public class ChessMatch {
 			}
 		}
 		return true;
+	}
+
+	public boolean isDraw(Color playerColor) {
+		return !isKingInCheck(playerColor) && !isThereAnyPossibleMovesDrawValidation(playerColor);
+	}
+
+	private boolean isThereAnyPossibleMovesDrawValidation(Color playerColor) {
+		List<Piece> pieces = piecesOnTheBoard.stream().filter(x -> ((ChessPiece) x).getColor() == playerColor)
+				.collect(Collectors.toList());
+
+		for (Piece piece : pieces) {
+			
+			boolean[][] possibleMoves = piece.possibleMoves();
+			for (int i=0;i < possibleMoves.length;i++) {
+				for (int j=0;j < possibleMoves[i].length;j++) {
+					if(possibleMoves[i][j]) {
+						return true;
+					}
+				}
+			}
+			
+		}
+		return false;
 	}
 
 	// ================== INITIAL SETUP ==================
