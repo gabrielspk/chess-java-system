@@ -1,4 +1,4 @@
-package application;
+package chess.ui;
 
 import java.util.Arrays;
 import java.util.InputMismatchException;
@@ -10,8 +10,9 @@ import chess.ChessMatch;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.Color;
+import tictactoe.Player;
 
-public class UI {
+public class ChessUI {
 
 	public static final String ANSI_RESET = "\u001B[0m";
 	public static final String ANSI_BLACK = "\u001B[30m";
@@ -43,12 +44,9 @@ public class UI {
 		}
 	}
 
-	public static void printBoard(ChessMatch chessMatch, List<ChessPiece> capturedPieces) {
-		printBoard(chessMatch.getPieces());
-		System.out.println();
-		printCapturedPieces(capturedPieces);
-		System.out.println();
+	public static void printMatchStatus(ChessMatch chessMatch) {
 		System.out.println("Turn: " + chessMatch.getTurn());
+
 		if (!chessMatch.getCheckMate()) {
 			System.out.println("Waiting player: " + chessMatch.getCurrentPlayer());
 			if (chessMatch.getDraw()) {
@@ -57,8 +55,7 @@ public class UI {
 			if (chessMatch.getCheck()) {
 				System.out.println("CHECK!");
 			}
-		}
-		else {
+		} else {
 			System.out.println("CHECKMATE!");
 			System.out.println("Winner: " + chessMatch.getCurrentPlayer());
 		}

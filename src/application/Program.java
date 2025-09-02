@@ -9,50 +9,95 @@ import chess.ChessMatch;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.exceptions.ChessException;
+import chess.ui.ChessUI;
+import tictactoe.TicTacToeMatch;
+import tictactoe.TicTacToePosition;
+import tictactoe.exceptions.TicTacToeException;
+import tictactoe.ui.TicTacToeUI;
 
 public class Program {
 
 	public static void main(String[] args) {
 
 		Scanner sc = new Scanner(System.in);
+
+		System.out.println("Escolha um jogo:");
+		System.out.println("1 - Xadrez");
+		System.out.println("2 - Tic Tac Toe");
+		System.out.print("Opção: ");
+		System.out.println();
+		int escolha = sc.nextInt();
+		sc.nextLine();
+
+		switch (escolha) {
+		case 1:
+			startChess(sc);
+			break;
+		case 2:
+			startTicTacToe(sc);
+			break;
+		default:
+			System.out.println("Opção inválida!");
+		}
+	}
+
+	private static void startChess(Scanner sc) {
+
+		System.out.println("Iniciando Xadrez...");
+
 		ChessMatch chessMatch = new ChessMatch();
-		List<ChessPiece> capturedPieces = new ArrayList<>();
+		List<ChessPiece> captured = new ArrayList<>();
 
-		while (!chessMatch.getCheckMate() || !chessMatch.getDraw()) {
+		while (!chessMatch.getCheckMate() && !chessMatch.getDraw()) {
+			ChessUI.printMatchStatus(chessMatch);
+			ChessUI.printBoard(chessMatch.getPieces());
+			ChessUI.printCapturedPieces(captured);
+
 			try {
-				UI.printBoard(chessMatch, capturedPieces);
-				UI.printBoard(chessMatch.getPieces());
-				UI.printCapturedPieces(capturedPieces);
-				System.out.println();
-				System.out.println("Source: ");
-				ChessPosition source = UI.readChessPosition(sc);
-				
+				System.out.print("SOURCE: ");
+				ChessPosition source = ChessUI.readChessPosition(sc);
+
 				boolean[][] possibleMoves = chessMatch.getLegalMoves(source);
-				UI.printBoard(chessMatch.getPieces(), possibleMoves);
+				ChessUI.clearScreenGitBash();
+				ChessUI.printBoard(chessMatch.getPieces(), possibleMoves);
 
-				System.out.println();
-				System.out.println("Target: ");
-				ChessPosition target = UI.readChessPosition(sc);
+				System.out.print("Target: ");
+				ChessPosition target = ChessUI.readChessPosition(sc);
+
 				ChessPiece capturedPiece = chessMatch.performChessMove(source, target);
-
 				if (capturedPiece != null) {
-					capturedPieces.add(capturedPiece);
+					captured.add(capturedPiece);
 				}
-				
-				if (chessMatch.getPromoted() != null) {
-					System.out.println("Enter piece for promotion (B/N/R/Q): ");
-					String type = sc.nextLine();
-					chessMatch.replacePromotedPiece(type);
-				}
-				
-			} catch (ChessException e) {
-				System.out.println(e.getMessage());
-				sc.nextLine();
-			} catch (InputMismatchException e) {
+
+			} catch (ChessException | InputMismatchException e) {
 				System.out.println(e.getMessage());
 				sc.nextLine();
 			}
 		}
-		UI.printBoard(chessMatch, capturedPieces);
+
+	}
+
+	private static void startTicTacToe(Scanner sc) {
+		System.out.println("Iniciando Tic Tac Toe...");
+		
+		TicTacToeMatch tttMatch = new TicTacToeMatch();
+		
+		while (!tttMatch.getDraw() || tttMatch.getWinner() != null) {
+			TicTacToeUI.printBoard(tttMatch.getPieces());
+			TicTacToeUI.printGameStatus(tttMatch.getCurrentPlayer(), tttMatch.getWinner(), tttMatch.getDraw());
+			
+			try {
+				
+				System.out.print("Target: ");
+				TicTacToePosition target = TicTacToeUI.readTicTacToePosition(sc);
+				
+				tttMatch.performPlay(target);
+				
+				
+			} catch (TicTacToeException | InputMismatchException e) {
+				System.out.println(e.getMessage());
+				sc.nextLine();
+			}
+		}
 	}
 }
