@@ -1,6 +1,5 @@
 package chess;
 
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -82,7 +81,7 @@ public class ChessMatch {
 
 	// ================== MOVE QUERIES ==================
 
-		public boolean[][] getLegalMoves(ChessPosition sourcePosition) {
+	public boolean[][] getLegalMoves(ChessPosition sourcePosition) {
 		Position source = sourcePosition.toPosition();
 		validateSourcePosition(source);
 		ChessPiece piece = (ChessPiece) board.getPiece(source);
@@ -148,9 +147,9 @@ public class ChessMatch {
 		updateCheckStatus();
 		updateCheckMateStatus();
 		updateDrawStatus();
-		
+
 		nextTurn();
-		
+
 		updateEnPassantVulnerability(movedPiece, source, target);
 
 		return (ChessPiece) capturedPiece;
@@ -175,7 +174,7 @@ public class ChessMatch {
 		}
 	}
 
-	private void handlePromotion(ChessPiece movedPiece, Position target) {
+	public void handlePromotion(ChessPiece movedPiece, Position target) {
 		promoted = null;
 
 		if (!(movedPiece instanceof Pawn))
@@ -186,6 +185,25 @@ public class ChessMatch {
 			promoted = (ChessPiece) board.getPiece(target);
 			promoted = replacePromotedPiece("Q");
 		}
+	}
+	
+	public ChessPiece replacePromotedPiece(String type) {
+		if (promoted == null) {
+			throw new IllegalStateException("There's no piece to be promoted");
+		}
+		if (!type.equals("B") && !type.equals("N") && !type.equals("R") && !type.equals("Q")) {
+			return promoted;
+		}
+
+		Position promotedPiecePosition = promoted.getChessPosition().toPosition();
+		Piece removePromotedPiece = board.removePiece(promotedPiecePosition);
+		piecesOnTheBoard.remove(removePromotedPiece);
+
+		ChessPiece newPromotedPiece = newPiece(type, promoted.getColor());
+		board.placePiece(newPromotedPiece, promotedPiecePosition);
+		piecesOnTheBoard.add(newPromotedPiece);
+
+		return newPromotedPiece;
 	}
 
 	private void updateEnPassantVulnerability(ChessPiece movedPiece, Position source, Position target) {
@@ -312,26 +330,6 @@ public class ChessMatch {
 			}
 			board.placePiece(pawn, pawnPosition);
 		}
-	}
-
-	public ChessPiece replacePromotedPiece(String type) {
-		if (promoted == null) {
-			throw new IllegalStateException("There's no piece to be promoted");
-		}
-		if (!type.equals("B") && !type.equals("H") && !type.equals("R") && !type.equals("Q")) {
-			throw new InvalidParameterException("Invalid type for promotion");
-		}
-
-		Position promotedPiecePosition = promoted.getChessPosition().toPosition();
-		Piece removePromotedPiece = board.removePiece(promotedPiecePosition);
-		piecesOnTheBoard.remove(removePromotedPiece);
-
-		ChessPiece newPromotedPiece = newPiece(type, promoted.getColor());
-		board.placePiece(newPromotedPiece, promotedPiecePosition);
-		piecesOnTheBoard.add(newPromotedPiece);
-
-		return newPromotedPiece;
-
 	}
 
 	private ChessPiece newPiece(String type, Color color) {
